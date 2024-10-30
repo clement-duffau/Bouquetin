@@ -164,7 +164,7 @@ int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin) {
 //              Vérifier le mode automatique
 /////////////////////////////////////////////////////////////////////////////
 void verifier_mode(void) {
-    Horodatage heure_actuelle;
+    Horodatage heure_actuelle;// TODO a deplacer
     recuperer_heure(&heure_actuelle); // Fonction pour récupérer l'heure
 
     // Vérifiez si l'heure actuelle est dans l'une des plages horaires
