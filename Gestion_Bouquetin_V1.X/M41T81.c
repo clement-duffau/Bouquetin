@@ -1,4 +1,5 @@
 #include "Headers_application.h"
+#include "M41T81.h"
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -9,6 +10,7 @@
 //
 unsigned char horloge[8];		//buffer pour lecture et stockage horloge
 struct tm heure_sys;
+Horodatage horloge_actuelle;
 //struct horloge_date_heure fonc_date_heure_sys;
 //
 ////
@@ -20,29 +22,36 @@ struct tm heure_sys;
 //
 //met les 8 octets utiles de l'horloge dans le tableau horloge[0]
 //
-void lit_horloge (void){       //debut fonction
-unsigned char x=0;
-start_2();
-write_2(0xD0);
-write_2(1);
-stop_2();
-start_2();
-write_2(0xD1);
-for (x=0;x<8;x++)              //boucle lecture 8 octet
-	{
-   	horloge[x]=read_2();   //place dans le tableau horloge la valeur
-	if (x<7)
-		{
-                ack_2();
-                }
-	else
-		{
-                nack_2();
-		}
-	}
-stop_2();
-horloge_sys();
-}                             //fin retour
+void lit_horloge(void) {
+    unsigned char x = 0;
+    start_2();
+    
+    if (write_2(0xD0) != 0) { // Vérification de l'écriture
+        stop_2();
+        return; // Sortie si l'écriture échoue
+    }
+
+    write_2(1);
+    stop_2();
+
+    start_2();
+    if (write_2(0xD1) != 0) {
+        stop_2();
+        return; // Sortie si l'écriture échoue
+    }
+
+    for (x = 0; x < 8; x++) {
+        horloge[x] = read_2();
+        if (x < 7) {
+            ack_2();
+        } else {
+            nack_2();
+        }
+    }
+    stop_2();
+    horloge_sys(); // Mettre à jour l'heure actuelle
+}
+                             //fin retour
 //
 //////////////////////////////////////////////////////////////////////
 //
@@ -161,32 +170,15 @@ stop_2();
 //////= 0 )*/
 //////int tm_isdst;/*Daylight Savings Time flag*/
 //////}
-void horloge_sys(void)
-    {
-    heure_sys.tm_sec=((((horloge[0]&0x70)>>4)*10)+(horloge[0]&0x0F));
-    heure_sys.tm_min=((((horloge[1]&0x70)>>4)*10)+(horloge[1]&0x0F));       
-    heure_sys.tm_hour=((((horloge[2]&0x30)>>4)*10)+(horloge[2]&0x0F));
-    if((horloge[3]&0x07)!=0)
-        {
-        heure_sys.tm_wday=(horloge[3]&0x07)-1;      //  original 1 a 7
-        }
-    else
-        {
-        heure_sys.tm_wday=6;  
-        }
-    heure_sys.tm_mday=((((horloge[4]&0x30)>>4)*10)+(horloge[4]&0x0F));
-    if((horloge[5]&0x1F)!=0)
-        {
-        heure_sys.tm_mon=(((((horloge[5]&0x10)>>4)*10)+(horloge[5]&0x0F))-1);    //original 1 a 12
-        }
-    else
-        {
-        heure_sys.tm_mon=11; 
-        } 
-    heure_sys.tm_year=((((horloge[6]&0xF0)>>4)*10)+(horloge[6]&0x0F));
-    heure_sys.tm_yday=0;
-    heure_sys.tm_isdst=0;   
-    //
-    //
-    }
+
+
+void horloge_sys(void) {
+    horloge_actuelle.secondes = (((horloge[0] & 0x70) >> 4) * 10) + (horloge[0] & 0x0F);
+    horloge_actuelle.minutes = (((horloge[1] & 0x70) >> 4) * 10) + (horloge[1] & 0x0F);
+    horloge_actuelle.heure = (((horloge[2] & 0x30) >> 4) * 10) + (horloge[2] & 0x0F);
+    horloge_actuelle.jour = (((horloge[4] & 0x30) >> 4) * 10) + (horloge[4] & 0x0F);
+    horloge_actuelle.mois = (((horloge[5] & 0x10) >> 4) * 10) + (horloge[5] & 0x0F) - 1;
+    horloge_actuelle.annee = (((horloge[6] & 0xF0) >> 4) * 10) + (horloge[6] & 0x0F);
+}
+
 //////

@@ -2,7 +2,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
-//                PROGRAMME MODELE CHARGEUR SOLAIRE
+//                PROGRAMME MODELE GESTION BOUQUETIN
 //                      BASE    PIC24EP256GP202
 //                          LE 19/09/2024
 //                                       
@@ -16,70 +16,77 @@
 #include <xc.h>
 #include "Bits_config.h"
 #include "Headers_application.h"
-//
-//
+
+
 /////////////////////////////////////////////////////////////////////////////
 //				DECLARATION DE RAM
 /////////////////////////////////////////////////////////////////////////////
 //
-unsigned short entt1,entt2;
-unsigned char compteur10ms=0;		//Compteur 10ms
-unsigned char tache=0;              //tache programme principal
-//
-unsigned short tp_cli=500;
-//
-///////////////////////////////////////////////////////////////////////
-//
-//                  Definition des entrees
-//
-///////////////////////////////////////////////////////////////////////
-//
-flag val_entrees;               
-#define entrees      val_entrees.mot   			// DÈfinition du mot entrees
-#define bp_blocage   val_entrees.bita.b0        //Bouton blocage porte ouverte
-#define ctx_ir       val_entrees.bita.b1        //EntrÈe 1 image
-#define dt_pres      val_entrees.bita.b2        //DÈtection de prÈsence animal
-#define bp_forcage   val_entrees.bita.b3        //Bouton de forÁage fermeture
-#define dt_appat     val_entrees.bita.b6        //Bouton de forÁage fermeture
-#define in1_img      val_entrees.bita.b8        //EntrÈe 1 image
-#define in2_img      val_entrees.bita.b11        //EntrÈe 2 image
 
-//
-//
-///////////////////////////////////////////////////////////////////////
-//
-//                  Definition des fronts montants des entrees
-//
-///////////////////////////////////////////////////////////////////////
-//
+// D√©finition des broches en fonction du sch√©ma
+#define BP_FOR        PORTAbits.RA0      // Bouton For√ßage (broche 19)
+#define DET_PRES      PORTAbits.RA1      // D√©tection Pr√©sence (broche 20)
+#define BP_SEC        PORTAbits.RA2      // Bouton S√©curit√© (broche 22)
+
+#define TX_IMG        PORTBbits.RB4      // Transmission Image (broche 33)
+#define RX_IMG        PORTBbits.RB5      // R√©ception Image (broche 41)
+#define TX_RAD        PORTBbits.RB6      // Transmission Radio (broche 42)
+#define RX_RAD        PORTBbits.RB7      // R√©ception Radio (broche 43)
+#define AL_TX_RX_IR   PORTBbits.RB8      // Alarme Transmission/R√©ception IR (broche 25)
+#define IN1_IMG       PORTBbits.RB9      // Entr√©e Image 1 (broche 8)
+#define IN2_IMG       PORTBbits.RB10     // Entr√©e Image 2 (broche 11)
+
+#define OUT1_IMG      LATBbits.LATB11    // Sortie Image 1 (broche 12)
+#define OUT2_IMG      LATBbits.LATB12    // Sortie Image 2 (broche 35)
+#define OUT_CAGE      LATBbits.LATB13    // Sortie Cage (broche 9)
+#define RST_RAD       LATBbits.LATB14    // R√©initialisation Radio (broche 14)
+#define DT_AP         LATAbits.RA4       // D√©tection App√¢t (broche 34)
+#define OUT1          LATBbits.LATB2     // Sortie 1 (broche 5)
+#define OUT2          LATBbits.LATB3     // Sortie 2 (broche 38)
+#define AL_RAD        LATCbits.LATC0     // Alarme Radio (broche 6)
+
+unsigned short entt1, entt2;
+unsigned char compteur10ms = 0;    // Compteur 10ms
+unsigned char tache = 0;           // T√¢che programme principal
+unsigned short tp_cli = 500;
+unsigned char i;
+
+// d√©finition du calendrier
+
+Horodatage plages_horaires[5][2]; // 5 plages : [d√©but][fin]
+unsigned char mode_auto = 0; // 0 pour manuel, 1 pour automatique
+
+// D√©claration de la structure flag pour les entr√©es
+flag val_entrees;               
+#define entrees      val_entrees.mot    // D√©finition du mot entrees
+#define bp_blocage   val_entrees.bita.b0 // Bouton blocage porte ouverte
+#define ctx_ir       val_entrees.bita.b1 // Entr√©e 1 image
+#define dt_pres      val_entrees.bita.b2 // D√©tection de pr√©sence animal
+#define bp_forcage   val_entrees.bita.b3 // Bouton de for√ßage fermeture
+#define dt_appat     val_entrees.bita.b6 // D√©tection app√¢t
+#define in1_img      val_entrees.bita.b8 // Entr√©e 1 image
+#define in2_img      val_entrees.bita.b11 // Entr√©e 2 image
+
+// D√©claration de la structure flag pour les fronts montants des entr√©es
 flag val_fronts_entrees;               
-#define fronts_entrees      val_fronts_entrees.mot   			// DÈfinition du mot entrees
-#define fbp_blocage   val_fronts_entrees.bita.b0        //Bouton blocage porte ouverte
-#define fctx_ir       val_fronts_entrees.bita.b1        //EntrÈe 1 image
-#define fdt_pres      val_fronts_entrees.bita.b2        //DÈtection de prÈsence animal
-#define fbp_forcage   val_fronts_entrees.bita.b3        //Bouton de forÁage fermeture
-#define fdt_appat     val_fronts_entrees.bita.b6        //Bouton de forÁage fermeture
-#define fin1_img      val_fronts_entrees.bita.b8        //EntrÈe 1 image
-#define fin2_img      val_fronts_entrees.bita.b11        //EntrÈe 2 image
-//
-//
-///////////////////////////////////////////////////////////////////////
-//
-//                  Definition flag application
-//
-///////////////////////////////////////////////////////////////////////
-//
+#define fronts_entrees      val_fronts_entrees.mot    // D√©finition du mot fronts_entrees
+#define fbp_blocage   val_fronts_entrees.bita.b0 // Bouton blocage porte ouverte
+#define fctx_ir       val_fronts_entrees.bita.b1 // Entr√©e 1 image
+#define fdt_pres      val_fronts_entrees.bita.b2 // D√©tection de pr√©sence animal
+#define fbp_forcage   val_fronts_entrees.bita.b3 // Bouton de for√ßage fermeture
+#define fdt_appat     val_fronts_entrees.bita.b6 // D√©tection app√¢t
+#define fin1_img      val_fronts_entrees.bita.b8 // Entr√©e 1 image
+#define fin2_img      val_fronts_entrees.bita.b11 // Entr√©e 2 image
+
+// D√©claration de la structure flag pour les bits d'application
 flag flag_appli_bits;               
-#define fl_appli      flag_appli_bits.mot   			// DÈfinition du mot entrees
-#define regul         flag_appli_bits.bita.b0           //DÈfinition du bouton poussoir
-#define fl_cli        flag_appli_bits.bita.b1           //Flag clignotant 0,5/0,5s
-//
-//
-/////////////////////////////////////////////////////////////////////////////
-//				DECLARATION DE RAM GLOBALE
-/////////////////////////////////////////////////////////////////////////////
-//
-//
+#define fl_appli      flag_appli_bits.mot    // D√©finition du mot fl_appli
+#define regul         flag_appli_bits.bita.b0 // Bouton poussoir r√©gulation
+#define fl_cli        flag_appli_bits.bita.b1 // Flag clignotant 0,5/0,5s
+
+#define TEMPS_CLI 500
+#define TIMER_PERIOD 8750
+
 /////////////////////////////////////////////////////////////////////////////
 //				ZONE ECRITURE DES INTERRUPTIONS
 /////////////////////////////////////////////////////////////////////////////
@@ -88,178 +95,100 @@ flag flag_appli_bits;
 /////////////////////////////////////////////////////////////////////////////
 //				         INTERRUPTION TIMER  1ms
 /////////////////////////////////////////////////////////////////////////////
-//
-void __attribute__((interrupt,no_auto_psv))_T1Interrupt(void)
-{
-IFS0bits.T1IF=0;                      // raz flag
-//
-//  Filtres analogiques
-//
-//
-tp_1ms_eep();
-//
-//
-if(tp_com1!=0)
-    {
-    tp_com1--;
+void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
+    IFS0bits.T1IF = 0; // RAZ flag
+
+    tp_1ms_eep(); // Filtres analogiques
+
+    if (tp_com1 != 0) {
+        tp_com1--;
     }
-//
-if(tp_cli!=0)
-    {
-    tp_cli--;
-    }
-else
-    {
-    tp_cli=500;
-    fl_cli=~fl_cli;
-    }
-//
-}//Fin IT timer
-//
-//
-/////////////////////////////////////////////////////////////////////////////
-//              Fonction traitement des entrÈes/sorties
-/////////////////////////////////////////////////////////////////////////////
-//
-void lecture_entrees (void)      //LECTURE DES ENTREES + DETECTION FRONTS
-{
-entt1=((PORTA&0x0013)<<2);
-entt1|=(PORTB&0x0903);
-if(entt1==entt2)
-    {
-    fronts_entrees=~entrees&entt1;      //detection des fronts
-    entrees=entt1;
-    }
-else
-    {
-    entt2=entt1;
+
+    if (tp_cli != 0) {
+        tp_cli--;
+    } else {
+        tp_cli = 500;
+        fl_cli = ~fl_cli;
     }
 }
-//
-//
+
 /////////////////////////////////////////////////////////////////////////////
-//				ZONE PROGRAMME PRINCIPAL
+//              Fonction traitement des entr√©es/sorties
 /////////////////////////////////////////////////////////////////////////////
-//
+void lecture_entrees(void) { // LECTURE DES ENTREES + DETECTION FRONTS
+    entt1 = ((PORTA & 0x0013) << 2);
+    entt1 |= (PORTB & 0x0903);
+    if (entt1 == entt2) {
+        fronts_entrees = ~entrees & entt1; // Detection des fronts
+        entrees = entt1;
+    } else {
+        entt2 = entt1;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//              Fonction pour v√©rifier les plages horaires
+/////////////////////////////////////////////////////////////////////////////
+int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin) {
+    // Comparer l'heure actuelle avec les plages d√©but et fin
+
+    // if (actuelle.annee<debut.annee ) -> non
+    // if acutelle.mois < debut.mois -> non
+    // if actuelle.jour < debut.jour -> non
+
+    if ((actuelle->annee > debut->annee || 
+        (actuelle->annee == debut->annee && actuelle->mois > debut->mois) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour > debut->jour) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure > debut->heure) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes > debut->minutes) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes == debut->minutes && actuelle->secondes >= debut->secondes)) &&
+        (actuelle->annee < fin->annee || 
+        (actuelle->annee == fin->annee && actuelle->mois < fin->mois) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour < fin->jour) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure < fin->heure) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes < fin->minutes) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes == fin->minutes && actuelle->secondes <= fin->secondes))) {
+        return 1; // Dans la plage
+    }
+    return 0; // Pas dans la plage
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//              V√©rifier le mode automatique
+/////////////////////////////////////////////////////////////////////////////
+void verifier_mode(void) {
+    if (est_dans_plage(&horloge_actuelle, &plages_horaires[i][0], &plages_horaires[i][1])) {
+    mode_auto = 1;
+    return;
+}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//				FONCTION PRINCIPALE
+/////////////////////////////////////////////////////////////////////////////
 int main(void) {
-//
-LATB=0;               // RAZ des ports E/S
-PORTB=0;
-LATA=0;
-PORTA=0;    
-//
-//
-OSCCON=0x46;          //ProcÈdure de dÈblocage d'Ècriture dans les registres.
-OSCCON=0x57;		  //
-OSCCONbits.IOLOCK=0;  //
-//
-// affectation des broches affectables
-//
-RPINR18bits.U1RXR=37;    //uart1 RX
-RPOR1bits.RP36R=1;       //UART1 TX
-RPINR19bits.U2RXR=39;    //uart2 RX
-RPOR2bits.RP38R=2;       //UART2 TX
 
-RPOR0bits.RP20R = 16;    //PWM1 16
-//
-OSCCON=0x46;           //ProcÈdure de blocage d'Ècriture dans les registres
-OSCCON=0x57;		   //
-OSCCONbits.IOLOCK=1;   //
-//
-//
-// Configuration PLL pour 40MIPS ‡ partir de 10Mhz
-//
-PLLFBD = 54; // M = 33
-CLKDIVbits.PLLPOST = 0; // N2 = 2
-CLKDIVbits.PLLPRE = 0; // N1 = 2
-//
-// switch oscillateur FRC vers PLL
-//
-__builtin_write_OSCCONH(0x03);
-__builtin_write_OSCCONL(0x01);
-//
-// Attente switch clock OK
-//
-while (OSCCONbits.COSC!= 0b011);
-//
-// Attente PLL OK
-//
-while(OSCCONbits.LOCK!= 1) {};
-//
-//
-TRISB=0x09AF;           // initialisation du port B
-TRISA=0xF87F;           // initialisation du port A
-//
-LATA=0;
-PORTA=0;     //RAZ des entrÈes des ports
-LATB=0;      // RAZ des sorties des ports
-PORTB=0;
+    while (1) {
+        lecture_entrees(); // LECTURE DES ENTREES
+        verifier_mode(); // V√©rifiez si nous sommes en mode automatique
 
-//
-//      Configuration du timer principal IT ‡ 1ms
-//
-PR1=8750;       //PÈriode timer 1
-T1CON=0xA010;    //Config timer 1 TCY/8
-//
-//			 Configuration des pÈriphÈriques
-//
-//  Initialisation du convertisseur analogique/numÈrique
-//
-ANSELA=0x0000;
-ANSELB=0x0000;
-//
-//
-//  Raz gÈnÈrale des flags d'interruption
-//
-IFS0=0;          //Raz flags interruption
-IFS1=0;          //Raz flags interruption
-IFS2=0;          //Raz flags interruption
-IFS3=0;          //Raz flags interruption
-IFS4=0;          //Raz flags interruption
-//
-//
-//           Initialisation de variables
-//
-//
-//   Configuration et autorisation des intÈrruptions 
-//
-//
-OC1CON1=0;
-OC1CON2=0;
-OC1CON1bits.OCTSEL = 0x07;
-OC1CON1bits.OCM = 6;
-OC1CON2bits.SYNCSEL = 0x1F;
-OC1RS=3500;    //frequence 20kHz (1/3500)*70e6
-OC1R=0;     //rapport cyclique en %   ((0/3500)*100)
-//
-AD1CON1bits.ADON=1;
-//
-init_com ();       //Initialisation UART
-//
-restaure ();
-//
-// It timer  on prioritÈ 1
-//
-IPC0bits.T1IP=1;	 //PrioritÈ des interruptions T1 P1
-//
-IEC0bits.T1IE=1;  // It timer 1 on
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//                          DEBUT DE BOUCLE PROGRAMME
-//
-//////////////////////////////////////////////////////////////////////////////////////
-//
-while(1)
-{
-//
-    lecture_entrees();    //Fonction de lecture des entrÈes
-    gestion_com();    //Fonction de gestion communication
-    gestion_eep();    //Fonctions de gestion de l'EEPROM
-//
-}//      FIN DE BOUCLE
-//
-//     FIN FONCTION PRINCIPALE
-}///////// NE PAS ENLEVER///////////////////////
-//
+        // Traitement des actions en fonction des entr√©es et du mode
+        if (mode_auto) {
+            // Actions automatiques
+            if (dt_pres) {
+                // Ouvrir la cage si pr√©sence
+                OUT_CAGE = 1;
+            }
+        } else {
+            // Actions manuelles
+            if (bp_forcage) {
+                // For√ßage de la fermeture de la cage
+                OUT_CAGE = 0;
+            }
+        }
+
+        // Autres actions √† traiter...
+    }
+
+    return 0;
+}
