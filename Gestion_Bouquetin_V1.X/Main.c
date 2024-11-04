@@ -33,7 +33,7 @@ unsigned char OUT_CAGE;
 
 // definition du calendrier
 
-Horodatage plages_horaires[5][2]; // 5 plages : [debut][fin]
+struct Horodatage plages_horaires[5][2]; // 5 plages : [debut][fin]
 unsigned char mode_auto = 0; // 0 pour manuel, 1 pour automatique
 
 // Declaration de la structure flag pour les entrees
@@ -133,14 +133,14 @@ void gestion_actions(void)
         // Actions automatiques
         if ((dt_pres || dt_appat) && !bp_blocage) {
             // Fermer la cage si détection de présence ou d'appât, et que le bouton de sécurité n'est pas activé
-            OUT_CAGE = 0;
+            out_cage = 0;
         }
     } 
     else {
         // Actions manuelles
         if (bp_forcage) {
             // Forcage de la fermeture de la cage
-            OUT_CAGE = 0;
+            out_cage = 0;
         }
     }
 
@@ -151,27 +151,27 @@ void gestion_actions(void)
 /////////////////////////////////////////////////////////////////////////////
 //              Fonction pour verifier les plages horaires
 /////////////////////////////////////////////////////////////////////////////
-int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin) {
+int est_dans_plage(struct Horodatage *actuelle,struct  Horodatage *debut,struct Horodatage *fin) 
+{
     // Comparer l'heure actuelle avec les plages debut et fin
-
-    // if (actuelle.annee<debut.annee ) -> non
+    // if (actuelle.annee < debut.annee ) -> non
     // if acutelle.mois < debut.mois -> non
     // if actuelle.jour < debut.jour -> non
 
-    if ((actuelle->annee > debut->annee || 
-        (actuelle->annee == debut->annee && actuelle->mois > debut->mois) ||
-        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour > debut->jour) ||
-        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure > debut->heure) ||
-        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes > debut->minutes) ||
-        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes == debut->minutes && actuelle->secondes >= debut->secondes)) &&
-        (actuelle->annee < fin->annee || 
-        (actuelle->annee == fin->annee && actuelle->mois < fin->mois) ||
-        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour < fin->jour) ||
-        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure < fin->heure) ||
-        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes < fin->minutes) ||
-        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes == fin->minutes && actuelle->secondes <= fin->secondes))) {
-        return 1; // Dans la plage
-    }
+//    if ((actuelle->annee > debut->annee || 
+//        (actuelle->annee == debut->annee && actuelle->mois > debut->mois) ||
+//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour > debut->jour) ||
+//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure > debut->heure) ||
+//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes > debut->minutes) ||
+//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes == debut->minutes && actuelle->secondes >= debut->secondes)) &&
+//        (actuelle->annee < fin->annee || 
+//        (actuelle->annee == fin->annee && actuelle->mois < fin->mois) ||
+//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour < fin->jour) ||
+//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure < fin->heure) ||
+//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes < fin->minutes) ||
+//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes == fin->minutes && actuelle->secondes <= fin->secondes))) {
+//        return 1; // Dans la plage
+//    }
     return 0; // Pas dans la plage
 }
 
