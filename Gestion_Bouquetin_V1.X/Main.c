@@ -23,35 +23,13 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 
-// Definition des broches en fonction du schema
-#define BP_FOR        PORTAbits.RA0      // Bouton Forcage (broche 19)
-#define DET_PRES      PORTAbits.RA1      // Detection Presence (broche 20)
-#define BP_SEC        PORTAbits.RA2      // Bouton Securite (broche 22)
-
-
-
-#define TX_IMG        PORTBbits.RB4      // Transmission Image (broche 33)
-#define RX_IMG        PORTBbits.RB5      // Reception Image (broche 41)
-#define TX_RAD        PORTBbits.RB6      // Transmission Radio (broche 42)
-#define RX_RAD        PORTBbits.RB7      // Reception Radio (broche 43)
-#define AL_TX_RX_IR   PORTBbits.RB8      // Alarme Transmission/Reception IR (broche 25)
-#define IN1_IMG       PORTBbits.RB9      // Entree Image 1 (broche 8)
-#define IN2_IMG       PORTBbits.RB10     // Entree Image 2 (broche 11)
-
-#define OUT1_IMG      LATBbits.LATB11    // Sortie Image 1 (broche 12)
-#define OUT2_IMG      LATBbits.LATB12    // Sortie Image 2 (broche 35)
-#define OUT_CAGE      LATBbits.LATB13    // Sortie Cage (broche 9)
-#define RST_RAD       LATBbits.LATB14    // Reinitialisation Radio (broche 14)
-#define DT_AP         LATAbits.LATA4     // Detection Appat (broche 34)
-#define OUT1          LATBbits.LATB2     // Sortie 1 (broche 5)
-#define OUT2          LATBbits.LATB3     // Sortie 2 (broche 38)
-#define AL_RAD        LATCbits.LATC0     // Alarme Radio (broche 6)
 
 unsigned short entt1, entt2;
 unsigned char compteur10ms = 0;    // Compteur 10ms
 unsigned char tache = 0;           // Tache programme principal
 unsigned short tp_cli = 500;
 unsigned char i;
+unsigned char OUT_CAGE;
 
 // definition du calendrier
 
@@ -86,8 +64,6 @@ flag flag_appli_bits;
 #define regul         flag_appli_bits.bita.b0 // Bouton poussoir regulation
 #define fl_cli        flag_appli_bits.bita.b1 // Flag clignotant 0,5/0,5s
 
-#define TEMPS_CLI 500
-#define TIMER_PERIOD 8750
 
 /////////////////////////////////////////////////////////////////////////////
 //				ZONE ECRITURE DES INTERRUPTIONS
@@ -128,12 +104,34 @@ void lecture_entrees(void) { // LECTURE DES ENTREES + DETECTION FRONTS
     }
 }
 
+
+
+
+void lire_plages_horaires(unsigned long adresse_debut) {
+    // Vérifier l'état de l'EEPROM avant de lire
+    if (etat_eep() == 0) {
+        // Lire les données depuis l'EEPROM et les stocker dans la variable globale
+        lit_donnee_eep(adresse_debut, (unsigned char *)plages_horaires, sizeof(plages_horaires));
+    }
+}
+
+
+
+void ecrire_plages_horaires(unsigned long adresse_debut) {
+    // Vérifier l'état de l'EEPROM avant d'écrire
+    if (etat_eep() == 0) {
+        // Écrire les données dans l'EEPROM
+        ecrit_donnee_eep(adresse_debut, (unsigned char *)plages_horaires, sizeof(plages_horaires));
+    }
+}
+
+
 void gestion_actions(void)
 {
     // Traitement des actions en fonction des entrees et du mode
     if (mode_auto) {
         // Actions automatiques
-        if ((DET_PRES || DT_AP) && !BP_SEC) {
+        if ((dt_pres || dt_appat) && !bp_blocage) {
             // Fermer la cage si détection de présence ou d'appât, et que le bouton de sécurité n'est pas activé
             OUT_CAGE = 0;
         }
@@ -177,6 +175,9 @@ int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin) {
     return 0; // Pas dans la plage
 }
 
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 //              Verifier le mode automatique
 /////////////////////////////////////////////////////////////////////////////
@@ -196,6 +197,7 @@ void verifier_mode(void) {
 int main(void) {
 
     while (1) {
+        lire_plages_horaires(0xB0);
         lecture_entrees(); // LECTURE DES ENTREES
         gestion_com();    //Fonction de gestion communication
         gestion_eep();    //Fonctions de gestion de l'EEPROM

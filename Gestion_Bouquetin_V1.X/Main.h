@@ -118,6 +118,9 @@ typedef union {unsigned long trlong;
 void lecture_entrees (void);
 void gestoin_actions(void);
 void verifier_mode(void);
+void lire_plages_horaires(unsigned long adresse_debut);
+void ecrire_plages_horaires(unsigned long adresse_debut);
+int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin);
 //
 //
 /////////////////////////////////////////////////////////////////////////////
