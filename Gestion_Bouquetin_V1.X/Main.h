@@ -129,11 +129,7 @@ void gestoin_actions(void);
 void verifier_mode(void);
 void lire_plages_horaires(unsigned long adresse_debut);
 void ecrire_plages_horaires(unsigned long adresse_debut);
-<<<<<<< HEAD
 int est_dans_plage (struct Horodatage * ,struct Horodatage *,struct Horodatage *);
-=======
-int est_dans_plage(Horodatage *actuelle, Horodatage *debut, Horodatage *fin);
->>>>>>> f17b6a2e2777668ac6933232526f304d75d14435
 //
 //
 /////////////////////////////////////////////////////////////////////////////

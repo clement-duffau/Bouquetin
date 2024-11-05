@@ -10,7 +10,7 @@
 //
 unsigned char horloge[8];		//buffer pour lecture et stockage horloge
 struct tm heure_sys;
-Horodatage horloge_actuelle;
+struct Horodatage horloge_actuelle;
 //struct horloge_date_heure fonc_date_heure_sys;
 //
 ////

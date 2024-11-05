@@ -29,7 +29,6 @@ unsigned char compteur10ms = 0;    // Compteur 10ms
 unsigned char tache = 0;           // Tache programme principal
 unsigned short tp_cli = 500;
 unsigned char i;
-unsigned char OUT_CAGE;
 
 // definition du calendrier
 
