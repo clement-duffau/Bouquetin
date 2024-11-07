@@ -29,6 +29,7 @@ unsigned char compteur10ms = 0;    // Compteur 10ms
 unsigned char tache = 0;           // Tache programme principal
 unsigned short tp_cli = 500;
 unsigned char i;
+unsigned char var_test=0;
 
 // definition du calendrier
 
@@ -157,20 +158,20 @@ int est_dans_plage(struct Horodatage *actuelle,struct  Horodatage *debut,struct 
     // if acutelle.mois < debut.mois -> non
     // if actuelle.jour < debut.jour -> non
 
-//    if ((actuelle->annee > debut->annee || 
-//        (actuelle->annee == debut->annee && actuelle->mois > debut->mois) ||
-//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour > debut->jour) ||
-//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure > debut->heure) ||
-//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes > debut->minutes) ||
-//        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes == debut->minutes && actuelle->secondes >= debut->secondes)) &&
-//        (actuelle->annee < fin->annee || 
-//        (actuelle->annee == fin->annee && actuelle->mois < fin->mois) ||
-//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour < fin->jour) ||
-//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure < fin->heure) ||
-//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes < fin->minutes) ||
-//        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes == fin->minutes && actuelle->secondes <= fin->secondes))) {
-//        return 1; // Dans la plage
-//    }
+    if ((actuelle->annee > debut->annee || 
+        (actuelle->annee == debut->annee && actuelle->mois > debut->mois) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour > debut->jour) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure > debut->heure) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes > debut->minutes) ||
+        (actuelle->annee == debut->annee && actuelle->mois == debut->mois && actuelle->jour == debut->jour && actuelle->heure == debut->heure && actuelle->minutes == debut->minutes && actuelle->secondes >= debut->secondes)) &&
+        (actuelle->annee < fin->annee || 
+        (actuelle->annee == fin->annee && actuelle->mois < fin->mois) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour < fin->jour) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure < fin->heure) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes < fin->minutes) ||
+        (actuelle->annee == fin->annee && actuelle->mois == fin->mois && actuelle->jour == fin->jour && actuelle->heure == fin->heure && actuelle->minutes == fin->minutes && actuelle->secondes <= fin->secondes))) {
+        return 1; // Dans la plage
+    }
     return 0; // Pas dans la plage
 }
 
@@ -190,18 +191,85 @@ void verifier_mode(void) {
     }
 }
 
+
+
+/////////////////////////////////////////////////////////////////////////////
+//				TESTS
+/////////////////////////////////////////////////////////////////////////////
+
+
+// Test pour est_dans_plage
+void test_est_dans_plage() {
+    struct Horodatage actuelle = {2024, 10, 30, 12, 0, 0};
+    struct Horodatage debut = {2024, 10, 30, 8, 0, 0};
+    struct Horodatage fin = {2024, 10, 30, 16, 0, 0};
+
+    int result = est_dans_plage(&actuelle, &debut, &fin);
+    if (result) {
+        var_test++;
+    } else {
+        var_test = 0;
+    }
+}
+
+// Test pour verifier_mode
+void test_verifier_mode() {
+    struct Horodatage horloge_actuelle = {2024, 10, 30, 10, 0, 0};  // L?heure actuelle
+    plages_horaires[0][0] = (struct Horodatage){2024, 10, 30, 8, 0, 0}; // Début plage
+    plages_horaires[0][1] = (struct Horodatage){2024, 10, 30, 16, 0, 0}; // Fin plage
+
+    verifier_mode();
+
+    if (mode_auto == 1) {
+        var_test++;
+    } else {
+        var_test = 0;
+    }
+}
+
+
+// Test pour gestion_actions
+void test_gestion_actions() {
+    // Cas 1 : mode automatique avec détection de présence
+    mode_auto = 1;
+    dt_pres = 1;
+    bp_blocage = 0;
+    gestion_actions();
+    if (out_cage == 0) {
+        var_test++;
+    } else {
+        var_test = 0;
+    }
+
+    // Cas 2 : mode manuel avec forcage
+    mode_auto = 0;
+    bp_forcage = 1;
+    gestion_actions();
+    if (out_cage == 0) {
+        var_test++;
+    } else {
+        var_test = 0;
+    }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //				FONCTION PRINCIPALE
 /////////////////////////////////////////////////////////////////////////////
 int main(void) {
 
     while (1) {
-        lire_plages_horaires(0xB0);
-        lecture_entrees(); // LECTURE DES ENTREES
-        gestion_com();    //Fonction de gestion communication
-        gestion_eep();    //Fonctions de gestion de l'EEPROM
-        verifier_mode(); // Verifiez si nous sommes en mode automatique
-        gestion_actions(); // Gestion des action en fonction du mode  
+        
+        test_est_dans_plage();
+        test_verifier_mode();
+        test_gestion_actions();
+        
+//        lire_plages_horaires(0xB0);
+//        lecture_entrees(); // LECTURE DES ENTREES
+//        gestion_com();    //Fonction de gestion communication
+//        gestion_eep();    //Fonctions de gestion de l'EEPROM
+//        verifier_mode(); // Verifiez si nous sommes en mode automatique
+//        gestion_actions(); // Gestion des action en fonction du mode  
         
 
 

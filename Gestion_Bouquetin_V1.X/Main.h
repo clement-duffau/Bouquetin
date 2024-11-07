@@ -130,6 +130,9 @@ void verifier_mode(void);
 void lire_plages_horaires(unsigned long adresse_debut);
 void ecrire_plages_horaires(unsigned long adresse_debut);
 int est_dans_plage (struct Horodatage * ,struct Horodatage *,struct Horodatage *);
+void test_gestion_actions();
+void test_verifier_mode();
+void test_est_dans_plage();
 //
 //
 /////////////////////////////////////////////////////////////////////////////
