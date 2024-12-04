@@ -10,7 +10,7 @@
 //
 unsigned char horloge[8];		//buffer pour lecture et stockage horloge
 struct tm heure_sys;
-struct Horodatage horloge_actuelle;
+struct tm horloge_actuelle;
 //struct horloge_date_heure fonc_date_heure_sys;
 //
 ////
@@ -31,7 +31,7 @@ void lit_horloge(void) {
         return; // Sortie si l'écriture échoue
     }
 
-    write_2(1);
+    write_2(0);
     stop_2();
 
     start_2();
@@ -65,7 +65,7 @@ void ecrit_horloge (void){   //debut fonction
 unsigned char x;
 start_2();
 write_2(0xD0);
-write_2(1);
+write_2(0);
 for (x=0;x<8;x++)           //boucle eciture 8 octets
 	{
         if(x==7)
@@ -93,7 +93,7 @@ void horloge_on (void){    //debut fonction
 unsigned char a;                 //
 start_2();
 write_2(0xD0);
-write_2(1);
+write_2(0);
 stop_2();
 start_2();
 write_2(0xD1);
@@ -103,22 +103,22 @@ if ((a & 0x80)!=0)           //si horloge deja on fin
 	{
 	start_2();
 	write_2(0xD0);
-    write_2(1);
+    write_2(0);
 	write_2(0);
 	stop_2();
-    start_2();
-	write_2(0xD0);
-    write_2(0x0C);
-	write_2(0);
-	stop_2();
+//    start_2();
+//	write_2(0xD0);
+//    write_2(0x0C);
+//	write_2(0);
+//	stop_2();
 	}
 else
 {
-    start_2();
-	write_2(0xD0);
-    write_2(0x0C);
-	write_2(0);
-	stop_2();
+//    start_2();
+//	write_2(0xD0);
+//    write_2(0x0C);
+//	write_2(0);
+//	stop_2();
 }
 }                      //fin retour
 //
@@ -135,7 +135,7 @@ void horloge_off (void){    //debut fonction
 unsigned char a;                 //
 start_2();
 write_2(0xD0);
-write_2(1);
+write_2(0);
 stop_2();
 start_2();
 write_2(0xD1);
@@ -144,7 +144,7 @@ a|=0x80;
 stop_2();
 start_2();
 write_2(0xD0);
-write_2(1);
+write_2(0);
 write_2(a);
 stop_2();
 }                      //fin retour
@@ -173,12 +173,17 @@ stop_2();
 
 
 void horloge_sys(void) {
-    horloge_actuelle.secondes = (((horloge[0] & 0x70) >> 4) * 10) + (horloge[0] & 0x0F);
-    horloge_actuelle.minutes = (((horloge[1] & 0x70) >> 4) * 10) + (horloge[1] & 0x0F);
-    horloge_actuelle.heure = (((horloge[2] & 0x30) >> 4) * 10) + (horloge[2] & 0x0F);
-    horloge_actuelle.jour = (((horloge[4] & 0x30) >> 4) * 10) + (horloge[4] & 0x0F);
-    horloge_actuelle.mois = (((horloge[5] & 0x10) >> 4) * 10) + (horloge[5] & 0x0F) - 1;
-    horloge_actuelle.annee = (((horloge[6] & 0xF0) >> 4) * 10) + (horloge[6] & 0x0F);
+
+    // Convertir les valeurs de l'horloge en format struct tm
+    heure_sys.tm_sec = ((horloge[0] & 0x70) >> 4) * 10 + (horloge[0] & 0x0F);
+    heure_sys.tm_min = ((horloge[1] & 0x70) >> 4) * 10 + (horloge[1] & 0x0F);
+    heure_sys.tm_hour = ((horloge[2] & 0x30) >> 4) * 10 + (horloge[2] & 0x0F);
+    heure_sys.tm_mday = ((horloge[4] & 0x30) >> 4) * 10 + (horloge[4] & 0x0F);
+    heure_sys.tm_mon = ((horloge[5] & 0x10) >> 4) * 10 + (horloge[5] & 0x0F) - 1; // Mois de 0 à 11
+    heure_sys.tm_year = ((horloge[6] & 0xF0) >> 4) * 10 + (horloge[6] & 0x0F) + 100; // Années depuis 1900
+    // Initialisation des autres champs de struct tm
+    heure_sys.tm_isdst = -1; // -1 pour indiquer que l'information sur l'heure d'été n'est pas connue
+
 }
 
 //////

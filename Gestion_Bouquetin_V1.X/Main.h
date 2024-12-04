@@ -16,14 +16,20 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 // Définition de la structure pour l'horodatage
-struct Horodatage{
-    unsigned char annee;    // Année
-    unsigned char mois;     // Mois (1-12)
-    unsigned char jour;     // Jour (1-31)
-    unsigned char heure;    // Heure (0-23)
-    unsigned char minutes;   // Minutes (0-59)
-    unsigned char secondes;  // Secondes (0-59)
-};
+//struct Horodatage{
+//    unsigned char annee;    // Année
+//    unsigned char mois;     // Mois (1-12)
+//    unsigned char jour;     // Jour (1-31)
+//    unsigned char heure;    // Heure (0-23)
+//    unsigned char minutes;   // Minutes (0-59)
+//    unsigned char secondes;  // Secondes (0-59)
+//};
+//
+/////////////////////////////////////////////////////////////////////////////
+//				DECLARATION DE TYPE
+/////////////////////////////////////////////////////////////////////////////
+//
+#define dmode_auto  1;    //
 //
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -129,16 +135,18 @@ void gestoin_actions(void);
 void verifier_mode(void);
 void lire_plages_horaires(unsigned long adresse_debut);
 void ecrire_plages_horaires(unsigned long adresse_debut);
-int est_dans_plage (struct Horodatage * ,struct Horodatage *,struct Horodatage *);
+int est_dans_plage(struct tm *actuelle, struct tm *debut, struct tm *fin);
+//int __est_dans_plage(struct Horodatage *, struct Horodatage *, struct Horodatage *);
 void test_gestion_actions();
 void test_verifier_mode();
 void test_est_dans_plage();
+void recevoir_plages_horaires(void);
 //
 //
 /////////////////////////////////////////////////////////////////////////////
 //				DECLARATION DE DONNEES EXTERNES
 /////////////////////////////////////////////////////////////////////////////
 //
-//extern 
+extern unsigned char mode_auto; // 0 pour manuel, 1 pour automatique
 //
 #endif

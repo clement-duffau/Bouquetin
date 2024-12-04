@@ -87,8 +87,11 @@ extern unsigned int adprom; //Indicateur adresse eeprom
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#define sclef 0           //Marqueur état eeprom si non programmée !=0xA5 sinon 0xA5
-#define slibre (sclef+sizeof(struct sclef)) //Octet libre
+#define splage 0           //Marqueur état eeprom si non programmée !=0xA5 sinon 0xA5
+#define smode  60          //
+#define stype_det  61          //
+#define stp_ferm  62          //
+#define slibre  63          //
 //
 #endif
 //

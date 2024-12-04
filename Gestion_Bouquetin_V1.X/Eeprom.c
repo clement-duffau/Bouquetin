@@ -253,23 +253,13 @@ void tp_1ms_eep(void)
 //
 void restaure (void)  //restauration des données eeprom
     {
-    unsigned char clef;
     while (etat_eep()!=0)
         {
         gestion_eep();
         }
-    lit_donnee_eep(sclef, &clef, 1);
-    if(clef!=0xA5)
+    lit_donnee_eep(smode,(unsigned char *)(&mode_auto), eep_char);
+    if((mode_auto<0)||(mode_auto>1))
         {
-        while (etat_eep()!=0)
-            {
-            gestion_eep();
-            }
-        clef=0xA5;
-        ecrit_donnee_eep(sclef, (unsigned char *) (&clef), 1); //Ecriture d'une variable en eeprom
-        }
-    while (etat_eep()!=0)
-        {
-        gestion_eep();
+        mode_auto=dmode_auto;
         }
     }

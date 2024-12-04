@@ -38,7 +38,7 @@ void horloge_sys(void);       // Met à jour l'heure système
 
 extern unsigned char horloge[8];  // Buffer pour lecture et stockage de l'horloge
 extern struct tm heure_sys;        // Structure pour gérer l'heure système
-extern struct Horodatage horloge_actuelle;
+extern struct tm horloge_actuelle;
 
 
 #endif // M41T81_H

@@ -24,7 +24,7 @@
 #include "time.h"
 //
 #include "main.h"
-#include "Com.h"
+#include "COM.h"
 #include "Eeprom.h"
 #include "I2C_c.h"
 #include "M41T81.h"
